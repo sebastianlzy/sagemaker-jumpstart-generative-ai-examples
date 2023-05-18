@@ -5,6 +5,24 @@
         "SageMakerEndPointName": {
             "Type": "String",
             "Description": "Name of your SageMaker Endpoint"
+        },
+        "DeployApi": {
+            "Type": "String",
+            "Default": "true",
+            "AllowedValues": [
+                true,
+                false
+            ]
+        }
+    },
+    "Conditions": {
+        "ToDeployApi": {
+            "Fn::Equals": [
+                {
+                    "Ref": "DeployApi"
+                },
+                "true"
+            ]
         }
     },
     "Resources": {
@@ -33,7 +51,7 @@
         "lambdafunctionRolePolicy": {
             "Type": "AWS::IAM::Policy",
             "Properties": {
-                "PolicyName": "lambda_sm_Function_Policy",
+                "PolicyName": "lambda_sm_Function_Policy_gaiworkshop",
                 "PolicyDocument": {
                     "Version": "2012-10-17",
                     "Statement": [
@@ -124,9 +142,9 @@
                     }
                 },
                 "Handler": "index.handler",
-                "FunctionName": "InvokeHFPytorchEndPoint",
+                "FunctionName": "InvokeHFPytorchEndPoint-gaiworkshop",
                 "Runtime": "nodejs12.x",
-                "Timeout": "30",
+                "Timeout": "60",
                 "Role": {
                     "Fn::GetAtt": [
                         "lambdafunctionRole",
@@ -138,7 +156,7 @@
         "HFPytorchAPI": {
             "Type": "AWS::ApiGateway::RestApi",
             "Properties": {
-                "Name": "HFPytorchAPI",
+                "Name": "HFPytorchAPI-gaiworkshop",
                 "Description": "API fronting Lambda function calling SageMaker HuggingFace Pytorch endpoint",
                 "FailOnWarnings": true
             }
@@ -181,6 +199,7 @@
                 "ApiGatewayAccount"
             ],
             "Type": "AWS::ApiGateway::Stage",
+            "Condition": "ToDeployApi",
             "Properties": {
                 "DeploymentId": {
                     "Ref": "ApiDeployment"
@@ -220,7 +239,7 @@
                 },
                 "Policies": [
                     {
-                        "PolicyName": "ApiGatewayLogsPolicy",
+                        "PolicyName": "ApiGatewayLogsPolicy-gaiworkshop",
                         "PolicyDocument": {
                             "Version": "2012-10-17",
                             "Statement": [
@@ -256,6 +275,7 @@
         },
         "ApiDeployment": {
             "Type": "AWS::ApiGateway::Deployment",
+            "Condition": "ToDeployApi",
             "DependsOn": [
                 "HFRequest"
             ],
